@@ -20,7 +20,7 @@ When you feel it's good enough, you can explicitly echo "Good job!" to end the c
 def load_llm_config() -> typing.Dict[str, str]:
     load_dotenv()
     llm_config = {
-        "model": "gpt-4",
+        "model": "gpt-35-turbo-16k",
         "api_key": os.environ["AZURE_OPENAI_API_KEY"],
         "base_url": os.environ["AZURE_OPENAI_ENDPOINT"],
         "api_type": "azure",
