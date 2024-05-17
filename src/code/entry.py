@@ -4,6 +4,18 @@ import typing
 from autogen import Agent, ConversableAgent, GroupChat, GroupChatManager, UserProxyAgent
 from dotenv import load_dotenv
 
+CODER_SYSTEM_MESSAGE = """
+Act as a Python developer.
+You will receive an idea for what to code, and there will be a code reviewer 
+who will review your code, so please repeat the idea in the code as comments, 
+so that the reviewer can understand the context.
+"""
+REVIEWER_SYSTEM_MESSAGE = """
+Act as a code reviewer for a Python developer.
+You will review code written by the developer, and provide feedback.
+When you feel it's good enough, you can explicitly echo "Good job!" to end the conversation.
+"""
+
 
 def load_llm_config() -> typing.Dict[str, str]:
     load_dotenv()
@@ -25,24 +37,29 @@ def initiate_chat(prompt: str):
     )
     coder = ConversableAgent(
         "Coder",
-        system_message="Act as a Python developer.",
+        system_message=CODER_SYSTEM_MESSAGE,
         llm_config=llm_config,
         human_input_mode="NEVER",
     )
     reviewer = ConversableAgent(
         "Reviewer",
-        system_message="Act as a code reviewer for a Python developer.",
+        system_message=REVIEWER_SYSTEM_MESSAGE,
         llm_config=llm_config,
         human_input_mode="NEVER",
     )
 
     def state_transition(last_speaker: Agent, groupchat: GroupChat):
+        messages = groupchat.messages
+
         if last_speaker is initializer:
             return coder
         elif last_speaker is coder:
             return reviewer
         else:
-            return initializer
+            if "Good job!" in messages[-1]["content"]:
+                return initializer
+            else:
+                return coder
 
     groupchat = GroupChat(
         agents=[initializer, coder, reviewer],
@@ -56,7 +73,7 @@ def initiate_chat(prompt: str):
 
 
 def main():
-    prompt = input("Enter a prompt: ")
+    prompt = input("What's in your mind?: ")
     initiate_chat(prompt)
 
 
